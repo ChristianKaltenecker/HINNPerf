@@ -1,0 +1,36 @@
+# HINNPerf
+
+> :warning: **This is not the original HINNPerf tool. Please be adviced that the code of HINNPerf has changed in this repository to prepare HINNPerf for further comparison to other ML tools!**
+
+You can find the original paper of HINNPerf along with a supplementary web site [here](https://dl.acm.org/doi/full/10.1145/3528100?casa_token=Z6hB1GSwELcAAAAA%3Alq27gjqh20zCF6tep1jox8tM1K1YvuaW97HmM0WmwLs5b3qVFL2XPxN0XMbn-wDM8WYHm1Xnrp0).
+
+In principle, HINNPerf can only be executed in a Docker container since HINNPerf uses a deprecated version of tensorflow.
+
+## How to Execute HINNPerf
+
+### Setup via Dockerfile
+
+To setup HINNPerf, we provide a [Dockerfile](./Dockerfile) for setting up a docker container.
+
+To apply this file, we rely on docker and refer to the [documentation](https://docs.docker.com/install/linux/docker-ce/ubuntu/) on how to install docker on your Linux operating system.
+
+After docker is installed, make sure that the docker daemon is running. On systemd, you can use ```systemctl status docker``` to check the status of the daemon and ```sudo systemctl start docker``` to start the daemon, if necessary.
+
+Next, download the [Dockerfile](./Dockerfile).
+The container is set up by invoking ```sudo docker build -t hinnperf ./``` in the directory where the Dockerfile is located.
+
+After setting up the docker container, all required ressources (i.e., packages, programs, and scripts) are installed and can now be used inside the container.
+To begin an interactive session, the command ```sudo docker run -i -t hinnperf /bin/bash``` can be used.
+
+### Execute ML
+
+TBA
+
+## Hyperparameter
+
+| Name  | Description | Default Value |
+| :---: | :---------: | :-----------: |
+| num_block | Number of blocks (i.e., interactions) | [2,3,4,5] |
+| num_layer_pb | Number of hidden layers in each block | [2,3,4] |
+| lamda | The lambda for L1 regularization | [0.001,0.01,0.1,1,10] |
+| random_state | Random seed that should be used | [1,2,3,4] |
