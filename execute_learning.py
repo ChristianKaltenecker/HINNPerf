@@ -18,13 +18,11 @@ from sklearn.metrics import mean_absolute_percentage_error
 class AutomationScriptParser:
 
     PARAMETERS = dict(
-        input_dim=[0, int],
         num_neuron=[128, int],
         num_block=[4, int],
         num_layer_pb=[3, int],
         lamda=[0.1, float],
-        linear=[False, bool],
-        gnorm=[False, bool],
+        use_linear=[False, bool],
         lr=[0.001, float],
         decay=[None, float],
         verbose=[True, bool],
@@ -39,13 +37,11 @@ class AutomationScriptParser:
         self.x_train = None
         self.param_space = None
         self.config = dict(
-            input_dim=self.config_num,
             num_neuron=128,
             num_block=4,
             num_layer_pb=3,
             lamda=0.1,
-            linear=False,
-            gnorm=False,
+            use_linear=False,
             lr=0.001,
             decay=None,
             verbose=True,
@@ -105,7 +101,6 @@ class AutomationScriptParser:
                     self.execute_hyperparameter_learning(arguments)
                 elif line.startswith("learn"):
                     self.config = self.read_in_settings(arguments, self.PARAMETERS)
-                    self.config["input_dim"] = [self.config_num]
                     self.learn_model()
                 else:
                     raise SyntaxError(f"The line {line} is not supported.")
@@ -116,7 +111,6 @@ class AutomationScriptParser:
         whole_data = np.genfromtxt(path, delimiter=';', skip_header=1)
         (self.all_sample_num, config_num) = whole_data.shape
         self.config_num = config_num - 1
-        self.config["input_dim"] = self.config_num
 
         self.x_train = whole_data[:, 0:self.config_num]
         self.y_train = whole_data[:, self.config_num][:, np.newaxis]
@@ -130,13 +124,13 @@ class AutomationScriptParser:
 
     def learn_model(self) -> None:
         # Initialize the learner
-        runner = ModelRunner(MLPHierarchicalModel, self.config)
+        runner = ModelRunner(**self.config)
         start = perf_counter()
         runner.train(self.x_train, self.y_train)
         error = mean_absolute_percentage_error(self.y_evaluation, runner.predict(self.x_evaluation))
         elapsed = perf_counter() - start
         print(f"Elapsed learning time(seconds): {elapsed}")
-        print(f"Prediction Error: {error}")
+        print(f"Prediction Error: {error * 100}")
 
     def execute_hyperparameter_learning(self, arguments: List[str]) -> None:
         '''
@@ -160,7 +154,7 @@ class AutomationScriptParser:
                 self.config[parameter] = value
 
             # Perform k-fold cross validation
-            results = cross_validate(ModelRunner(MLPHierarchicalModel, self.config), self.x_train, self.y_train, cv=5, return_estimator=True, scoring='neg_mean_absolute_percentage_error')
+            results = cross_validate(ModelRunner(**self.config), self.x_train, self.y_train, cv=5, return_estimator=True, scoring='neg_mean_absolute_percentage_error')
             error = 0
             for estimator in results['estimator']:
                 if len(self.x_evaluation) > 0:

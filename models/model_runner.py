@@ -1,7 +1,6 @@
 from typing import Any
 
 from models.models import MLPHierarchicalModel
-from utils.data_preproc import system_samplesize, seed_generator, DataPreproc
 import numpy as np
 import time
 import tensorflow as tf
@@ -11,37 +10,17 @@ from sklearn.metrics import mean_absolute_percentage_error
 class ModelRunner():
     """Generic class for training models"""
 
-    def __init__(self, model_class, config):
-        """
-        Args:
-            data_preproc: [DataPreproc object] preprocess and generate training data
-            model_class: [class] deep learning model class
-            config: configures to define model, which should contain:
-                        - input_dim: [int] number of configurations for the dataset (i.e., column dimension)
-                        - num_neuron: [int] number of neurons in each MLP layer
-                        - num_block: [int] number of blocks in the network
-                        - num_layer_pb: [int] number of layers in per block
-                        - decay: [float] fraction to decay learning rate
-                        - verbose: whether print the intermediate results
-                        - random_state: The random seed for the learner
-        """
-        self.data_preproc = None
-
-        self.input_dim = config['input_dim']
-        self.num_neuron = config['num_neuron']
-        self.num_block = config['num_block']
-        self.num_layer_pb = config['num_layer_pb']
-        self.lamda = config['lamda']
-        self.use_linear = config['linear']
-        self.decay = config['decay']
-        self.lr = config['lr']
-        self.verbose = config['verbose']
-        if 'random_state' in config:
-            self.random_seed = config['random_state']
-        else:
-            self.random_seed = 1
-
+    def __init__(self, num_neuron=128, num_block=4, num_layer_pb=3, lamda=0.1, decay=None, use_linear=False, lr=0.001, verbose=False, random_state=1, model_class=MLPHierarchicalModel):
+        self.num_neuron = num_neuron
+        self.num_block = num_block
+        self.num_layer_pb = num_layer_pb
+        self.lamda = lamda
+        self.use_linear = use_linear
+        self.lr = lr
+        self.verbose = verbose
+        self.random_state = random_state
         self.model_class = model_class
+        self.decay = decay
         self.model = None
 
     def fit(self, x_train, y_train):
@@ -51,10 +30,10 @@ class ModelRunner():
         Args:
             config: configures to create a model object
         """
+        self.input_dim = x_train.shape[1]
+        self.model = self.execute_learning(x_train, y_train)
 
-        model = self.execute_learning(x_train, y_train)
-
-        model.finalize()
+        #self.model.finalize()
 
         return self
 
@@ -66,6 +45,7 @@ class ModelRunner():
             config: configures to create a model object
         """
 
+        self.input_dim = x_train.shape[1]
         self.model = self.execute_learning(x_train, y_train)
 
         Y_pred_train = self.model.sess.run(self.model.output, {self.model.X: x_train})
@@ -75,22 +55,31 @@ class ModelRunner():
         return mape_error
 
     def execute_learning(self, x_train, y_train):
-        model = self.model_class(self.input_dim, self.num_neuron, self.num_block, self.num_layer_pb, self.lamda,
-                                 self.use_linear, self.decay, self.verbose, self.random_seed)
-        model.build_train()
+        self.input_dim = x_train.shape[1]
+        self.model = self.model_class(self.input_dim, self.num_neuron, self.num_block, self.num_layer_pb, self.lamda,
+                                 self.use_linear, self.decay, self.verbose, self.random_state)
+        self.model.build_train()
         lr = self.lr
         decay = lr / 1000
         train_seed = 0
         for epoch in range(1, 2000):
             train_seed += 1
-            _, cur_loss, pred = model.sess.run([model.train_op, model.loss, model.output],
-                                               {model.X: x_train, model.Y: y_train, model.lr: lr})
+            _, cur_loss, pred = self.model.sess.run([self.model.train_op, self.model.loss, self.model.output],
+                                               {self.model.X: x_train, self.model.Y: y_train, self.model.lr: lr})
 
             lr = lr * 1 / (1 + decay * epoch)
-        return model
+        return self.model
 
     def predict(self, x) -> Any:
         return self.model.sess.run(self.model.output, {self.model.X: x})
 
     def finalize(self):
         self.model.finalize()
+
+    def get_params(self, deep=False):
+        return {"num_block": self.num_block, "num_layer_pb": self.num_layer_pb, "num_neuron": self.num_neuron, "lamda": self.lamda, "random_state": self.random_state}
+
+    def set_params(self, **parameters):
+        for parameter, value in parameters.items():
+            setattr(self, parameter, value)
+        return self
