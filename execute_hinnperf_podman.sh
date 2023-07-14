@@ -138,14 +138,15 @@ main () {
     echo "Copying results from container to destination"
     $PODMAN_COMMAND cp $container_id:$CONTAINER_LOG_FILE $LOG_FILE
     $PODMAN_COMMAND cp $container_id:$CONTAINER_LOG_ERROR_FILE ${LOG_FILE}_error
+    $PODMAN_COMMAND cp $container_id:$CONTAINER_HYPERPARAMETER_FILE_LOCATION $HYPERPARAMETER_CSV_RESULT_FILE
 
     # Stop the container
     echo "Stopping container"
-    #$PODMAN_COMMAND container stop $container_id
+    $PODMAN_COMMAND container stop $container_id
 
     # Remove the container
     echo "Removing container"
-    #$PODMAN_COMMAND container rm $container_id
+    $PODMAN_COMMAND container rm $container_id
 
     if [ "$REMOVE_LOCAL_COPY" = true ]
     then
