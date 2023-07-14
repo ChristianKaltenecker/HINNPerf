@@ -145,7 +145,10 @@ main () {
     echo "Copying results from container to destination"
     $PODMAN_COMMAND cp $container_id:$CONTAINER_LOG_FILE $LOG_FILE
     $PODMAN_COMMAND cp $container_id:$CONTAINER_LOG_ERROR_FILE ${LOG_FILE}_error
-    $PODMAN_COMMAND cp $container_id:$CONTAINER_HYPERPARAMETER_FILE_LOCATION $HYPERPARAMETER_CSV_RESULT_FILE
+    if [ ! -z $HYPERPARAMETER_CSV_RESULT_FILE ]
+    then
+        $PODMAN_COMMAND cp $container_id:$CONTAINER_HYPERPARAMETER_FILE_LOCATION $HYPERPARAMETER_CSV_RESULT_FILE
+    fi
 
     # Stop the container
     echo "Stopping container"

@@ -223,5 +223,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    logging.getLogger("tensorflow").setLevel(logging.WARNING)
+    logging.getLogger("tensorflow").setLevel(logging.ERROR)
     main()
