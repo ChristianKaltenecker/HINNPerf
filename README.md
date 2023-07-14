@@ -28,7 +28,7 @@ Note that you can use the flags in an arbitrary order.
 
 For instance, you can use the following command:
 ```
-./execute_hinnperf_podman.sh -e /local/storage/kaltenec/tmp/brotli.csv -a /tmp/brotli/some_configs.csv -f /tmp/results.csv -l /tmp/hinnperf.log num_block:[2,3,4] random_state:[1,2,3]
+./execute_hinnperf_podman.sh -e /tmp/brotli.csv -a /tmp/some_configs_of_brotli.csv -f /tmp/results.csv -l /tmp/hinnperf.log num_block:[2,3,4] random_state:[1,2,3]
 ```
 
 ### Setup via Dockerfile (For Debugging)

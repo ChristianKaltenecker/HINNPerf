@@ -1,10 +1,12 @@
 #!/bin/bash
 
-export XDG_RUNTIME_DIR="/scratch/$USER/"
-export HOME="/scratch/$USER/"
+mkdir -p /tmp/$USER/
+
+export XDG_RUNTIME_DIR="/tmp/$USER/"
+export HOME="/tmp/$USER/"
 
 # Definition of constants
-PODMAN_ROOT="/local/storage/$USER/podman-images/"
+PODMAN_ROOT="/tmp/$USER/podman-images/"
 
 CONTAINER_DATA_ROOT="/data"
 CONTAINER_A_FILE_LOCATION="$CONTAINER_DATA_ROOT/learn.a"
