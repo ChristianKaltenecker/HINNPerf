@@ -10,9 +10,11 @@ In principle, HINNPerf can only be executed in a Docker or podman container sinc
 
 To execute HINNPerf inside a docker container, you can use a shell script that sets up a docker container using podman.
 The syntax to execute the script is as follows:
-'''
+
+```
 ./execute_hinnperf_podman.sh -e <PathToEvaluationSetFile> -a <PathToAllMeasurementFile> -f <PathToFileForHyperparameterTuningResults> [--remove-images] <Hyperparameters>
-'''
+```
+
 The meaning of the parameters is as follows:
 
 | Name  | Description |
@@ -25,9 +27,9 @@ The meaning of the parameters is as follows:
 Note that you can use the flags in an arbitrary order.
 
 For instance, you can use the following command:
-'''
+```
 ./execute_hinnperf_podman.sh -e /local/storage/kaltenec/tmp/brotli.csv -a /tmp/brotli/some_configs.csv -f /tmp/results.csv -l /tmp/hinnperf.log num_block:[2,3,4] random_state:[1,2,3]
-'''
+```
 
 ### Setup via Dockerfile (For Debugging)
 
