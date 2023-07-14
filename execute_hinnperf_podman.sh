@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ROOT_DIR=/tmp/${USER}_hinnperf/
+ROOT_DIR=/tmp/${USER}_hinnperf
 
 mkdir -p $ROOT_DIR
 
@@ -20,7 +20,7 @@ CONTAINER_LOG_ERROR_FILE="$CONTAINER_DATA_ROOT/result.log_error"
 
 CONTAINER_SCRIPT_LOCATION="/application/HINNPerf/execute_learning.py"
 
-A_FILE_LOCATION="/tmp/learn.a"
+A_FILE_LOCATION="$ROOT_DIR/learn.a"
 
 REMOVE_LOCAL_COPY=false
 
@@ -138,6 +138,7 @@ main () {
     echo "$PODMAN_COMMAND exec -it $container_id /bin/bash -c python $CONTAINER_SCRIPT_LOCATION  $CONTAINER_A_FILE_LOCATION > $CONTAINER_LOG_FILE 2> $CONTAINER_LOG_ERROR_FILE"
     $PODMAN_COMMAND exec -it $container_id /bin/bash -c "python $CONTAINER_SCRIPT_LOCATION  $CONTAINER_A_FILE_LOCATION > $CONTAINER_LOG_FILE 2> $CONTAINER_LOG_ERROR_FILE"
 
+    rm $A_FILE_LOCATION
     # Copy log files
     echo "Copying results from container to destination"
     $PODMAN_COMMAND cp $container_id:$CONTAINER_LOG_FILE $LOG_FILE
