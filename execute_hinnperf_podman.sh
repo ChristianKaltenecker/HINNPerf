@@ -1,12 +1,14 @@
 #!/bin/bash
 
-mkdir -p /tmp/$USER/
+ROOT_DIR=/tmp/${USER}_hinnperf/
 
-export XDG_RUNTIME_DIR="/tmp/$USER/"
-export HOME="/tmp/$USER/"
+mkdir -p $ROOT_DIR
+
+export XDG_RUNTIME_DIR="$ROOT_DIR"
+export HOME="$ROOT_DIR"
 
 # Definition of constants
-PODMAN_ROOT="/tmp/$USER/podman-images/"
+PODMAN_ROOT="$ROOT_DIR/podman-images/"
 
 CONTAINER_DATA_ROOT="/data"
 CONTAINER_A_FILE_LOCATION="$CONTAINER_DATA_ROOT/learn.a"
