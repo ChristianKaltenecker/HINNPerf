@@ -24,6 +24,8 @@ A_FILE_LOCATION="$ROOT_DIR/learn.a"
 
 REMOVE_LOCAL_COPY=false
 
+CURRENT_SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 # Definition of functions
 parse_arguments () {
     # Read in the arguments
@@ -115,7 +117,7 @@ main () {
     if [ ! -d $PODMAN_ROOT ]
     then
         echo "Building the container locally"
-        $PODMAN_COMMAND build -t hinnperf .
+        $PODMAN_COMMAND build -t hinnperf ${CURRENT_SCRIPT_DIR}
     fi
 
     # Start the container in detached mode
