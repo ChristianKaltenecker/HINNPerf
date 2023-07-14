@@ -6,6 +6,8 @@ from pathlib import Path
 from time import perf_counter
 from typing import List, Dict, Any
 
+import tensorflow as tf
+import logging
 import numpy as np
 import pandas as pd
 
@@ -222,4 +224,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    tf.get_logger().setLevel(logging.ERROR)
     main()
