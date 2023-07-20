@@ -37,6 +37,7 @@ class AutomationScriptParser:
         self.y_train = None
         self.x_train = None
         self.param_space = None
+        self.nfp = None
         self.config = dict(
             num_neuron=128,
             num_block=4,
@@ -109,6 +110,9 @@ class AutomationScriptParser:
     def parse_measurement_file(self, path: str) -> None:
         if not os.path.exists(path):
             raise FileNotFoundError(f"The file {path} does not exist!")
+        # Save the NFP column; this column is needed later on for the evaluation set
+        with open(path, 'r') as data_file:
+            self.nfp = data_file.readline().split(";")[-1]
         whole_data = np.genfromtxt(path, delimiter=';', skip_header=1)
         (self.all_sample_num, config_num) = whole_data.shape
         self.config_num = config_num - 1
@@ -119,17 +123,21 @@ class AutomationScriptParser:
     def parse_evaluation_set_file(self, path: str) -> None:
         if not os.path.exists(path):
             raise FileNotFoundError(f"The file {path} does not exist!")
+        # Detect the correct NFP column
+        with open(path, 'r') as evaluation_file:
+            header_elements = evaluation_file.readline().split(';')
+            nfp_position = header_elements.index(self.nfp)
         self.evaluation_set = np.genfromtxt(path, delimiter=';', skip_header=1)
         self.x_evaluation = self.evaluation_set[:, 0:self.config_num]
-        self.y_evaluation = self.evaluation_set[:, self.config_num][:, np.newaxis]
+        self.y_evaluation = self.evaluation_set[:, nfp_position][:, np.newaxis]
 
     def learn_model(self) -> None:
         # Initialize the learner
         runner = ModelRunner(**self.config)
         start = perf_counter()
         runner.train(self.x_train, self.y_train)
-        error = mean_absolute_percentage_error(self.y_evaluation, runner.predict(self.x_evaluation))
         elapsed = perf_counter() - start
+        error = mean_absolute_percentage_error(self.y_evaluation, runner.predict(self.x_evaluation))
         print(f"Elapsed learning time(seconds): {elapsed}")
         print(f"Prediction Error: {error * 100}")
 
