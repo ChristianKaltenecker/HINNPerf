@@ -112,7 +112,7 @@ class AutomationScriptParser:
             raise FileNotFoundError(f"The file {path} does not exist!")
         # Save the NFP column; this column is needed later on for the evaluation set
         with open(path, 'r') as data_file:
-            self.nfp = data_file.readline().split(";")[-1]
+            self.nfp = data_file.readline().split(";")[-1].replace("\n", "").strip()
         whole_data = np.genfromtxt(path, delimiter=';', skip_header=1)
         (self.all_sample_num, config_num) = whole_data.shape
         self.config_num = config_num - 1
