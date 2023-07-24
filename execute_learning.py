@@ -17,7 +17,14 @@ from sklearn.metrics import mean_absolute_percentage_error
 
 
 class AutomationScriptParser:
+    """
+    This class handles parsing the automation script (see the SPLConqueror project).
+    Note that we only support a very limited number of commands.
+    """
 
+    """
+    The parameters for the approach.
+    """
     PARAMETERS = dict(
         num_neuron=[128, int],
         num_block=[4, int],
@@ -31,6 +38,9 @@ class AutomationScriptParser:
     )
 
     def __init__(self):
+        """
+        Initializes the script parser.
+        """
         self.y_evaluation = None
         self.x_evaluation = None
         self.config_num = None
@@ -52,6 +62,16 @@ class AutomationScriptParser:
         self.grid_search_file_name = None
 
     def read_in_settings(self, settings: List[str], parameter_list: Dict[str, List]) -> Dict[str, Any]:
+        """
+        Reads in the given settings for hyperparameter tuning.
+
+        Args:
+            settings: The settings provided by the user.
+            parameter_list: The current parameter list that will be overwritten and used to check whether the user
+                has inserted the correct datatypes.
+        Returns:
+            A dictionary containing the parameters and their values.
+        """
         for setting in settings:
             setting_value_pair = setting.split(":")
             if setting_value_pair[0] in parameter_list.keys():
@@ -79,6 +99,12 @@ class AutomationScriptParser:
         return parameter_to_value_dict
 
     def parse_automation_file(self, path: str) -> None:
+        """
+        This method parses the automation file from the given path.
+
+        Args:
+            path: The path to the automation file.
+        """
         if not os.path.exists(path):
             raise FileNotFoundError(f"The file {path} does not exist!")
         # Change working directory to location of the automation script
@@ -108,6 +134,12 @@ class AutomationScriptParser:
                     raise SyntaxError(f"The line {line} is not supported.")
 
     def parse_measurement_file(self, path: str) -> None:
+        """
+        Parses the measurement file at the given path.
+
+        Args:
+            path: The path to the measurement file.
+        """
         if not os.path.exists(path):
             raise FileNotFoundError(f"The file {path} does not exist!")
         # Save the NFP column; this column is needed later on for the evaluation set
@@ -121,6 +153,12 @@ class AutomationScriptParser:
         self.y_train = whole_data[:, self.config_num][:, np.newaxis]
 
     def parse_evaluation_set_file(self, path: str) -> None:
+        """
+        Parses the evaluation file at the given path.
+
+        Args:
+            path: The path to the evaluation file.
+        """
         if not os.path.exists(path):
             raise FileNotFoundError(f"The file {path} does not exist!")
         # Detect the correct NFP column
@@ -132,6 +170,10 @@ class AutomationScriptParser:
         self.y_evaluation = self.evaluation_set[:, nfp_position][:, np.newaxis]
 
     def learn_model(self) -> None:
+        """
+        This method performs the typical learning procedure without hyperparameter tuning.
+        This method should be used only after the best hyperparameter setting has been discovered.
+        """
         # Initialize the learner
         runner = ModelRunner(**self.config)
         start = perf_counter()
@@ -139,21 +181,22 @@ class AutomationScriptParser:
         elapsed = perf_counter() - start
         error = mean_absolute_percentage_error(self.y_evaluation, runner.predict(self.x_evaluation))
         print(f"Elapsed learning time(seconds): {elapsed}")
-        print(f"Prediction Error: {error * 100}")
+        print(f"Prediction Error: {error * 100} %")
 
     def execute_hyperparameter_learning(self, arguments: List[str]) -> None:
-        '''
+        """
         This method performs a grid search on the given parameter space.
         Note that GridSearchCV from sklearn does the same, but uses (1) another scoring function and (2) does not allow
         to access the individual models to perform predictions on an optional evaluation set.
-        This method returns the best setting as a string.
-        '''
+
+        Args:
+            arguments: The arguments provided by the user for hyperparameter tuning.
+        """
         self.change_parameter_space(arguments)
         all_parameter_settings = ParameterGrid(self.param_space)
         parameters: Dict[str, List] = dict()
         parameters["params"] = []
         parameters["error"] = []
-        best_error = sys.float_info.max
         for setting in all_parameter_settings:
             # Apply setting
             for parameter, value in setting.items():
@@ -163,7 +206,8 @@ class AutomationScriptParser:
                 self.config[parameter] = value
 
             # Perform k-fold cross validation
-            results = cross_validate(ModelRunner(**self.config), self.x_train, self.y_train, cv=5, return_estimator=True, scoring='neg_mean_absolute_percentage_error')
+            results = cross_validate(ModelRunner(**self.config), self.x_train, self.y_train, cv=5,
+                                     return_estimator=True, scoring='neg_mean_absolute_percentage_error')
             error = 0
             for estimator in results['estimator']:
                 if len(self.x_evaluation) > 0:
@@ -174,6 +218,7 @@ class AutomationScriptParser:
             parameters["params"].append(setting)
             error = error / 5
 
+            # This error value is in percent
             parameters["error"].append(error * 100)
 
         # Create pandas dataframe and extract it
@@ -191,6 +236,12 @@ class AutomationScriptParser:
             df.to_csv(new_path, sep=';')
 
     def change_parameter_space(self, parameter_space_def: List[str]):
+        """
+        This method changes the parameter space as specified by the user.
+
+        Args:
+            parameter_space_def: The parameter space definition by the user.
+        """
         if parameter_space_def is None or len(parameter_space_def) == 0:
             return
 
@@ -199,29 +250,42 @@ class AutomationScriptParser:
             parameter_space_def = parameter_space_def[1:]
             if len(parameter_space_def) == 0:
                 return
-        to_execute = "self.param_space = {"
-        to_execute += self.format_parameter_space(parameter_space_def)
+        to_execute = self.format_parameter_space(parameter_space_def)
         exec(to_execute, globals(), locals())
 
     def format_parameter_space(self, parameter_space: List[str]) -> str:
-        formated_space = ""
+        """
+        This method formats the given parameter space in order to use it as a command.
+
+        Args:
+            parameter_space: The parameter space specified by the user.
+        Returns:
+            A string that can be executed.
+        """
+        formatted_space = "self.param_space = {"
         for parameter in parameter_space:
             if ":" in parameter:
                 name_value_pair = parameter.split(":")
-                formated_space += " '" + name_value_pair[0] + "' : "
-                formated_space += str(name_value_pair[1]).replace(';', ',') + ","
-        formated_space = formated_space[:-1]
-        formated_space += "}"
-        return formated_space
+                formatted_space += " '" + name_value_pair[0] + "' : "
+                formatted_space += str(name_value_pair[1]).replace(';', ',') + ","
+        formatted_space = formatted_space[:-1]
+        formatted_space += "}"
+        return formatted_space
 
 
 def print_usage() -> None:
+    """
+    This method prints the usage of this script.
+    """
     print("./execute_learning <PathToAFile>")
     print("PathToAFile\t represents the path to the automation file typically used for SPL Conqueror")
     print("Warning!\t Note that this script's only purpose is to read in a automation file and execute learning.")
 
 
 def main() -> None:
+    """
+    The main method of this script.
+    """
     if len(sys.argv) != 2:
         print_usage()
         exit(-1)
