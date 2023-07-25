@@ -53,5 +53,5 @@ To begin an interactive session, the command ```sudo docker run -i -t hinnperf /
 | :---: | :---------: | :-----------: |
 | num_block | Number of blocks (i.e., interactions) | [2,3,4,5] |
 | num_layer_pb | Number of hidden layers in each block | [2,3,4] |
-| lamda | The lambda for L1 regularization | [0.001,0.01,0.1,1,10] |
+| lambda_value | The lambda for L1 regularization | [0.001,0.01,0.1,1,10] |
 | random_state | Random seed that should be used | [1,2,3,4] |

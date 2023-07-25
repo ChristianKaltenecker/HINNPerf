@@ -119,7 +119,7 @@ class ModelRunner:
         Returns:
             a dictionary containing all the options that can be changed for hyperparameter tuning.
         """
-        return {"num_block": self.num_block, "num_layer_pb": self.num_layer_pb, "num_neuron": self.num_neuron, "lamda": self.lambda_value, "random_state": self.random_state}
+        return {"num_block": self.num_block, "num_layer_pb": self.num_layer_pb, "num_neuron": self.num_neuron, "lambda_value": self.lambda_value, "random_state": self.random_state}
 
     def set_params(self, **parameters):
         """
